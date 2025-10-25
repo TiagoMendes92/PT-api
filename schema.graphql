@@ -1,0 +1,261 @@
+scalar Upload
+
+type AlunoDetails {
+  id: ID!
+  userId: ID!
+  birthday: String
+  height: Int
+  weight: Int
+  sex: String
+  photographyUrl: String
+  photographyKey: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Query {
+  userDetails(user_id: ID!): AlunoDetails
+  categories: [Category!]!
+  exercises(first: Int = 10, after: String, category: String, searchTerm: String): ExerciseConnection!
+  exerciseVariables(first: Int = 10, after: String, searchTerm: String): ExerciseVariablesConnection!
+  adminUsers(first: Int, after: String, filter: AdminUserFilterInput): AdminUserConnection!
+  roles: [Role]
+  templates(first: Int = 10, after: String, searchTerm: String): TemplateConnection!
+  me: User
+}
+
+type Mutation {
+  updateUserDetails(birthday: String, height: Int, weight: Int, sex: String): AlunoDetails!
+  uploadProfilePhoto(file: Upload!): AlunoDetails!
+  addCategory(cat: CategoryInput!): Category
+  editCategory(cat: CategoryInputWithId!): Category
+  deleteCategory(id: String!): ID
+  addExercise(exercise: ExerciseInput!): Exercise
+  editExercise(exercise: ExerciseInputWithId!): Exercise
+  deleteExercise(id: String!): ID
+  addExerciseVariable(variable: ExerciseVariableInput!): ExerciseVariable
+  editExerciseVariable(variable: ExerciseVariableInputWithId!): ExerciseVariable
+  deleteExerciseVariable(id: ID!): ID
+  addUser(user: AdminUserInput!): AdminUser
+  editUser(user: AdminUserInputWithId!): AdminUser
+  deleteUser(id: String!): ID
+  activateUser(id: String!): AdminUser
+  deactivateUser(id: String!): AdminUser
+  setPassword(token: String!, password: String!): SetPasswordResult!
+  resendRegistrationEmail(userId: ID!): ResendEmailResult!
+  createTemplate(input: CreateTemplateInput!): Template!
+  updateTemplate(input: UpdateTemplateInput!): Template!
+  deleteTemplate(id: String!): ID
+  login(email: String!, password: String!): AuthPayload!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  createdAt: String!
+  updatedAt: String!
+  parentCategory: String
+  subcategories: [Category!]!
+}
+
+input CategoryInput {
+  name: String!
+  parent_category: String
+}
+
+input CategoryInputWithId {
+  id: ID!
+  name: String!
+  parent_category: String
+}
+
+type Exercise {
+  id: ID!
+  name: String!
+  url: String!
+  category: String!
+  allCategories: [Category!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ExerciseEdge {
+  cursor: String!
+  node: Exercise!
+}
+
+type ExerciseConnection {
+  edges: [ExerciseEdge!]!
+  pageInfo: PageInfo!
+}
+
+input ExerciseInput {
+  name: String!
+  category: String!
+  url: String!
+}
+
+input ExerciseInputWithId {
+  id: ID!
+  name: String!
+  category: String!
+  url: String!
+}
+
+type ExerciseVariable {
+  id: ID!
+  name: String!
+  unit: String
+  createdAt: String!
+  updatedAt: String!
+  description: String
+}
+
+type ExerciseVariableEdge {
+  cursor: String!
+  node: ExerciseVariable!
+}
+
+type ExerciseVariablesConnection {
+  edges: [ExerciseVariableEdge!]!
+  pageInfo: PageInfo!
+}
+
+input ExerciseVariableInput {
+  name: String!
+  unit: String!
+  description: String
+}
+
+input ExerciseVariableInputWithId {
+  id: ID!
+  name: String!
+  unit: String!
+  description: String
+}
+
+type AdminUser {
+  id: ID!
+  email: String!
+  name: String!
+  status: UserStatus!
+  createdAt: String!
+  updatedAt: String
+  archivedAt: String
+  deactivatedAt: String
+  passwordSetAt: String
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  DEACTIVATED
+  ARCHIVED
+}
+
+type AdminUserEdge {
+  cursor: String!
+  node: AdminUser!
+}
+
+type AdminUserConnection {
+  edges: [AdminUserEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SetPasswordResult {
+  success: Boolean!
+}
+
+type ResendEmailResult {
+  success: Boolean!
+  message: String!
+}
+
+input AdminUserFilterInput {
+  status: UserStatus
+  search: String
+}
+
+input AdminUserInput {
+  name: String!
+  email: String!
+}
+
+input AdminUserInputWithId {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+type Role {
+  id: ID!
+  name: String
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Template {
+  id: ID!
+  name: String!
+  description: String
+  createdBy: User!
+  exercises: [TemplateExercise!]!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TemplateExercise {
+  id: ID!
+  template: Template!
+  exercise: Exercise!
+  orderPosition: Int!
+  createdAt: String!
+}
+
+type TemplateEdge {
+  cursor: String!
+  node: Template!
+}
+
+type TemplateConnection {
+  edges: [TemplateEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreateTemplateInput {
+  name: String!
+  description: String
+  exercises: [TemplateExerciseInput!]!
+}
+
+input TemplateExerciseInput {
+  exerciseId: ID!
+  orderPosition: Int!
+}
+
+input UpdateTemplateInput {
+  id: String!
+  name: String!
+  description: String
+  exercises: [TemplateExerciseInput!]!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  role: String!
+  created_at: String
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}

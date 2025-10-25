@@ -1,0 +1,47 @@
+type Exercise {
+  id: ID!
+  name: String!
+  url: String!
+  category: String!
+  allCategories: [Category!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ExerciseEdge {
+  cursor: String!
+  node: Exercise!
+}
+
+type ExerciseConnection {
+  edges: [ExerciseEdge!]!
+  pageInfo: PageInfo!
+}
+
+input ExerciseInput {
+  name: String!
+  category: String!
+  url: String!
+}
+
+input ExerciseInputWithId {
+  id: ID!
+  name: String!
+  category: String!
+  url: String!
+}
+
+type Query {
+  exercises(
+    first: Int = 10
+    after: String
+    category: String
+    searchTerm: String
+  ): ExerciseConnection!
+}
+
+extend type Mutation {
+  addExercise(exercise: ExerciseInput!): Exercise
+  editExercise(exercise: ExerciseInputWithId!): Exercise
+  deleteExercise(id: String!): ID
+}

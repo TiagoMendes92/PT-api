@@ -1,0 +1,60 @@
+type Template {
+  id: ID!
+  name: String!
+  description: String
+  createdBy: User!
+  exercises: [TemplateExercise!]!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TemplateExercise {
+  id: ID!
+  template: Template!
+  exercise: Exercise!
+  orderPosition: Int!
+  createdAt: String!
+}
+
+type TemplateEdge {
+  cursor: String!
+  node: Template!
+}
+
+type TemplateConnection {
+  edges: [TemplateEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreateTemplateInput {
+  name: String!
+  description: String
+  exercises: [TemplateExerciseInput!]!
+}
+
+input TemplateExerciseInput {
+  exerciseId: ID!
+  orderPosition: Int!
+}
+
+input UpdateTemplateInput {
+  id: String!
+  name: String!
+  description: String
+  exercises: [TemplateExerciseInput!]!
+}
+
+extend type Query {
+  templates(
+    first: Int = 10
+    after: String
+    searchTerm: String
+  ): TemplateConnection!
+}
+
+extend type Mutation {
+  createTemplate(input: CreateTemplateInput!): Template!
+  updateTemplate(input: UpdateTemplateInput!): Template!
+  deleteTemplate(id: String!): ID
+}

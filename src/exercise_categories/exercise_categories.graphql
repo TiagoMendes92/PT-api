@@ -1,0 +1,45 @@
+type ExerciseVariable {
+  id: ID!
+  name: String!
+  unit: String
+  createdAt: String!
+  updatedAt: String!
+  description: String
+}
+
+type ExerciseVariableEdge {
+  cursor: String!
+  node: ExerciseVariable!
+}
+
+type ExerciseVariablesConnection {
+  edges: [ExerciseVariableEdge!]!
+  pageInfo: PageInfo!
+}
+
+input ExerciseVariableInput {
+  name: String!
+  unit: String!
+  description: String
+}
+
+input ExerciseVariableInputWithId {
+  id: ID!
+  name: String!
+  unit: String!
+  description: String
+}
+
+extend type Query {
+  exerciseVariables(
+    first: Int = 10
+    after: String
+    searchTerm: String
+  ): ExerciseVariablesConnection!
+}
+
+extend type Mutation {
+  addExerciseVariable(variable: ExerciseVariableInput!): ExerciseVariable
+  editExerciseVariable(variable: ExerciseVariableInputWithId!): ExerciseVariable
+  deleteExerciseVariable(id: ID!): ID
+}

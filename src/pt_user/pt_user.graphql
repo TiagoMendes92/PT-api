@@ -1,0 +1,71 @@
+type AdminUser {
+  id: ID!
+  email: String!
+  name: String!
+  status: UserStatus!
+  createdAt: String!
+  updatedAt: String
+  archivedAt: String
+  deactivatedAt: String
+  passwordSetAt: String
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  DEACTIVATED
+  ARCHIVED
+}
+
+type AdminUserEdge {
+  cursor: String!
+  node: AdminUser!
+}
+
+type AdminUserConnection {
+  edges: [AdminUserEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SetPasswordResult {
+  success: Boolean!
+}
+
+type ResendEmailResult {
+  success: Boolean!
+  message: String!
+}
+
+input AdminUserFilterInput {
+  status: UserStatus
+  search: String
+}
+
+input AdminUserInput {
+  name: String!
+  email: String!
+}
+
+input AdminUserInputWithId {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+extend type Query {
+  adminUsers(
+    first: Int
+    after: String
+    filter: AdminUserFilterInput
+  ): AdminUserConnection!
+}
+
+extend type Mutation {
+  addUser(user: AdminUserInput!): AdminUser
+  editUser(user: AdminUserInputWithId!): AdminUser
+  deleteUser(id: String!): ID
+  activateUser(id: String!): AdminUser
+  deactivateUser(id: String!): AdminUser
+  setPassword(token: String!, password: String!): SetPasswordResult!
+  resendRegistrationEmail(userId: ID!): ResendEmailResult!
+}

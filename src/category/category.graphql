@@ -1,0 +1,29 @@
+type Category {
+  id: ID!
+  name: String!
+  createdAt: String!
+  updatedAt: String!
+  parentCategory: String
+  subcategories: [Category!]!
+}
+
+input CategoryInput {
+  name: String!
+  parent_category: String
+}
+
+input CategoryInputWithId {
+  id: ID!
+  name: String!
+  parent_category: String
+}
+
+extend type Query {
+  categories: [Category!]!
+}
+
+extend type Mutation {
+  addCategory(cat: CategoryInput!): Category
+  editCategory(cat: CategoryInputWithId!): Category
+  deleteCategory(id: String!): ID
+}

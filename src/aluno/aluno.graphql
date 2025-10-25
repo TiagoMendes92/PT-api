@@ -1,0 +1,29 @@
+scalar Upload
+
+type AlunoDetails {
+  id: ID!
+  userId: ID!
+  birthday: String
+  height: Int
+  weight: Int
+  sex: String
+  photographyUrl: String
+  photographyKey: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+extend type Query {
+  userDetails(user_id: ID!): AlunoDetails
+}
+
+extend type Mutation {
+  updateUserDetails(
+    birthday: String
+    height: Int
+    weight: Int
+    sex: String
+  ): AlunoDetails!
+
+  uploadProfilePhoto(file: Upload!): AlunoDetails!
+}
