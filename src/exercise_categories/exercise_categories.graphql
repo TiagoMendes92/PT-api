@@ -31,6 +31,7 @@ input ExerciseVariableInputWithId {
 }
 
 extend type Query {
+  allVariables: [ExerciseVariable!]!
   exerciseVariables(
     first: Int = 10
     after: String

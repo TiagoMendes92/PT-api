@@ -5,7 +5,6 @@ import { encodeId } from "../shared/utils.js";
 export const mapTemplateRow = (row) => ({
   ...row,
   id: encodeId(Models.Template, row.id),
-  createdBy: row.created_by,
   archivedAt: row.archived_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,

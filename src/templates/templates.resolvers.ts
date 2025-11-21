@@ -90,6 +90,13 @@ export default {
           exercises: {
             exerciseId: string;
             orderPosition: number;
+            sets: {
+              setNumber: number;
+              variables: {
+                variableId: string;
+                targetValue?: string;
+              }[];
+            }[];
           }[];
         };
       },
@@ -136,7 +143,63 @@ export default {
           RETURNING *
         `;
 
-        await client.query(exerciseQuery, exerciseParams);
+        const exerciseResult = await client.query(
+          exerciseQuery,
+          exerciseParams
+        );
+        const templateExercises = exerciseResult.rows;
+
+        for (let i = 0; i < exercises.length; i++) {
+          const ex = exercises[i];
+          const templateExercise = templateExercises[i];
+
+          if (ex.sets && ex.sets.length > 0) {
+            const allVariables: any[] = [];
+
+            ex.sets.forEach((set) => {
+              set.variables.forEach((variable) => {
+                allVariables.push({
+                  templateExerciseId: templateExercise.id,
+                  setNumber: set.setNumber,
+                  variableId: decodeId(
+                    Models.ExerciseVariables,
+                    variable.variableId
+                  ),
+                  targetValue: variable.targetValue || null,
+                });
+              });
+            });
+
+            if (allVariables.length > 0) {
+              const variableValues = allVariables
+                .map(
+                  (_, idx) =>
+                    `($${idx * 4 + 1}, $${idx * 4 + 2}, $${idx * 4 + 3}, $${
+                      idx * 4 + 4
+                    })`
+                )
+                .join(", ");
+
+              const variableParams: any[] = [];
+              allVariables.forEach((v) => {
+                variableParams.push(
+                  v.templateExerciseId,
+                  v.setNumber,
+                  v.variableId,
+                  v.targetValue
+                );
+              });
+
+              const variableQuery = `
+                INSERT INTO template_exercise_set_variables 
+                (template_exercise_id, set_number, exercise_variable_id, target_value)
+                VALUES ${variableValues}
+              `;
+
+              await client.query(variableQuery, variableParams);
+            }
+          }
+        }
 
         await client.query("COMMIT");
 
@@ -158,6 +221,13 @@ export default {
           exercises: {
             exerciseId: string;
             orderPosition: number;
+            sets: {
+              setNumber: number;
+              variables: {
+                variableId: string;
+                targetValue?: string;
+              }[];
+            }[];
           }[];
         };
       },
@@ -181,7 +251,7 @@ export default {
         throw new Error(templateErrorMessage(error));
       }
 
-      await checkDuplication(name, context.user.id);
+      await checkDuplication(name, context.user.id, numericId);
 
       const client = await pool.connect();
 
@@ -219,7 +289,64 @@ export default {
           RETURNING *
         `;
 
-        await client.query(exerciseQuery, exerciseParams);
+        const exerciseResult = await client.query(
+          exerciseQuery,
+          exerciseParams
+        );
+        const templateExercises = exerciseResult.rows;
+
+        for (let i = 0; i < exercises.length; i++) {
+          const ex = exercises[i];
+          const templateExercise = templateExercises[i];
+
+          if (ex.sets && ex.sets.length > 0) {
+            const allVariables: any[] = [];
+
+            ex.sets.forEach((set) => {
+              set.variables.forEach((variable) => {
+                allVariables.push({
+                  templateExerciseId: templateExercise.id,
+                  setNumber: set.setNumber,
+                  variableId: decodeId(
+                    Models.ExerciseVariables,
+                    variable.variableId
+                  ),
+                  targetValue: variable.targetValue || null,
+                });
+              });
+            });
+
+            if (allVariables.length > 0) {
+              const variableValues = allVariables
+                .map(
+                  (_, idx) =>
+                    `($${idx * 4 + 1}, $${idx * 4 + 2}, $${idx * 4 + 3}, $${
+                      idx * 4 + 4
+                    })`
+                )
+                .join(", ");
+
+              const variableParams: any[] = [];
+              allVariables.forEach((v) => {
+                variableParams.push(
+                  v.templateExerciseId,
+                  v.setNumber,
+                  v.variableId,
+                  v.targetValue
+                );
+              });
+
+              const variableQuery = `
+                INSERT INTO template_exercise_set_variables 
+                (template_exercise_id, set_number, exercise_variable_id, target_value)
+                VALUES ${variableValues}
+              `;
+
+              await client.query(variableQuery, variableParams);
+            }
+          }
+        }
+
         await client.query("COMMIT");
         return mapTemplateRow(template);
       } catch (error) {
@@ -265,7 +392,7 @@ export default {
       const exercises = await pool.query(query, [numbericId]);
 
       return exercises.rows.map((r) => ({
-        id: encodeId(Models.Exercise, r.id),
+        id: encodeId(Models.TemplateExercises, r.id),
         orderPosition: r.order_position,
       }));
     },
@@ -283,13 +410,54 @@ export default {
         LEFT JOIN categories c ON c.id = e.category
         WHERE te.id = $1
         `;
-      const numbericId = decodeId(Models.Exercise, parent.id);
+
+      const numbericId = decodeId(Models.TemplateExercises, parent.id);
       const result = await pool.query(query, [numbericId]);
 
       return {
         ...result.rows[0],
         id: encodeId(Models.Exercise, result.rows[0].id),
       };
+    },
+    sets: async (parent, _) => {
+      const query = `
+        SELECT 
+          tesv.set_number,
+          tesv.target_value,
+          ev.id as variable_id,
+          ev.name as variable_name,
+          ev.description as variable_description,
+          ev.unit as variable_unit
+        FROM template_exercise_set_variables tesv
+        LEFT JOIN exercise_variables ev ON ev.id = tesv.exercise_variable_id
+        WHERE tesv.template_exercise_id = $1
+        ORDER BY tesv.set_number ASC, ev.name ASC
+      `;
+
+      const numbericId = decodeId(Models.TemplateExercises, parent.id);
+      const result = await pool.query(query, [numbericId]);
+      const setMap = new Map<number, any>();
+
+      result.rows.forEach((row) => {
+        if (!setMap.has(row.set_number)) {
+          setMap.set(row.set_number, {
+            setNumber: row.set_number,
+            variables: [],
+          });
+        }
+
+        setMap.get(row.set_number).variables.push({
+          variable: {
+            id: encodeId(Models.ExerciseVariables, row.variable_id),
+            name: row.variable_name,
+            description: row.variable_description,
+            unit: row.variable_unit,
+          },
+          targetValue: row.target_value,
+        });
+      });
+
+      return Array.from(setMap.values());
     },
   },
 };

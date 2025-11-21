@@ -11,7 +11,6 @@ export const mapUserRow = (row) => ({
   updatedAt: row.updated_at,
   archivedAt: row.archived_at,
   deactivatedAt: row.deactivated_at,
-  createdBy: row.created_by,
   registrationToken: row.registration_token,
   registrationTokenExpiresAt: row.registration_token_expires_at,
   passwordSetAt: row.password_set_at,

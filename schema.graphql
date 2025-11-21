@@ -17,6 +17,7 @@ type Query {
   userDetails(user_id: ID!): AlunoDetails
   categories: [Category!]!
   exercises(first: Int = 10, after: String, category: String, searchTerm: String): ExerciseConnection!
+  allVariables: [ExerciseVariable!]!
   exerciseVariables(first: Int = 10, after: String, searchTerm: String): ExerciseVariablesConnection!
   adminUsers(first: Int, after: String, filter: AdminUserFilterInput): AdminUserConnection!
   roles: [Role]
@@ -204,7 +205,6 @@ type Template {
   id: ID!
   name: String!
   description: String
-  createdBy: User!
   exercises: [TemplateExercise!]!
   archivedAt: String
   createdAt: String!
@@ -213,10 +213,20 @@ type Template {
 
 type TemplateExercise {
   id: ID!
-  template: Template!
   exercise: Exercise!
   orderPosition: Int!
+  sets: [TemplateExerciseSet!]!
   createdAt: String!
+}
+
+type TemplateExerciseSet {
+  setNumber: Int!
+  variables: [TemplateExerciseSetVariable!]!
+}
+
+type TemplateExerciseSetVariable {
+  variable: ExerciseVariable!
+  targetValue: String
 }
 
 type TemplateEdge {
@@ -238,6 +248,17 @@ input CreateTemplateInput {
 input TemplateExerciseInput {
   exerciseId: ID!
   orderPosition: Int!
+  sets: [TemplateExerciseSetInput!]!
+}
+
+input TemplateExerciseSetInput {
+  setNumber: Int!
+  variables: [TemplateExerciseSetVariableInput!]!
+}
+
+input TemplateExerciseSetVariableInput {
+  variableId: ID!
+  targetValue: String
 }
 
 input UpdateTemplateInput {

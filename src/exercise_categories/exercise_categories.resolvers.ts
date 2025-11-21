@@ -10,6 +10,18 @@ import { Models } from "../shared/enums.js";
 
 export default {
   Query: {
+    allVariables: async (_: any, {}, context: any) => {
+      requireAuth(context);
+
+      const query = `
+        SELECT ev.*
+        FROM exercise_variables ev
+        WHERE ev.created_by = $1 AND ev.archived_at IS NULL
+    `;
+
+      const result = await pool.query(query, [context.user.id]);
+      return result.rows.map((row) => mapExerciseVariableRow(row));
+    },
     exerciseVariables: async (
       _: any,
       args: {
