@@ -1,3 +1,8 @@
+type Photo {
+  url: String!
+  key: String!
+}
+
 type Category {
   id: ID!
   name: String!
@@ -5,6 +10,7 @@ type Category {
   updatedAt: String!
   parentCategory: String
   subcategories: [Category!]!
+  photo: Photo
 }
 
 input CategoryInput {
@@ -23,7 +29,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  addCategory(cat: CategoryInput!): Category
-  editCategory(cat: CategoryInputWithId!): Category
+  addCategory(cat: CategoryInput!, file: Upload): Category
+  editCategory(cat: CategoryInputWithId!, file: Upload): Category
   deleteCategory(id: String!): ID
 }

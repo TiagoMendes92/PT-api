@@ -1,7 +1,7 @@
 import pool from "../database.js";
 import { getCategoriesExercises } from "../exercise/utils.js";
 import { Models } from "../shared/enums.js";
-import { decodeId, encodeId } from "../shared/utils.js";
+import { decodeId, deletePhoto, uploadFile } from "../shared/utils.js";
 import { checkExistenceAndOwnership, requireAuth } from "../user/utils.js";
 import {
   checkDuplication,
@@ -35,11 +35,14 @@ export default {
   Mutation: {
     addCategory: async (
       _: any,
-      body: { cat: { name: string; parent_category: string } },
+      {
+        cat,
+        file,
+      }: { cat: { name: string; parent_category: string }; file: any },
       context
     ) => {
       requireAuth(context);
-      const { name, parent_category } = body.cat;
+      const { name, parent_category } = cat;
       const numericParentCategory = decodeId(Models.Category, parent_category);
       await checkDuplication(name, numericParentCategory, context.user.id);
 
@@ -55,15 +58,24 @@ export default {
       ];
 
       const result = await pool.query(insertQuery, insertParams);
+      const categoryId = result.rows[0].id;
+
+      await uploadFile(pool, "categories", categoryId, file);
       return mapCategoryRow(result.rows[0], []);
     },
     editCategory: async (
       _: any,
-      body: { cat: { id: string; name: string; parent_category?: string } },
+      {
+        cat,
+        file,
+      }: {
+        cat: { id: string; name: string; parent_category?: string };
+        file: any;
+      },
       context
     ) => {
       requireAuth(context);
-      const { name, id, parent_category } = body.cat;
+      const { name, id, parent_category } = cat;
       const numericId = decodeId(Models.Category, id);
 
       const error = await checkExistenceAndOwnership(
@@ -94,7 +106,7 @@ export default {
 
       const updateParams = [name, numericParentCategory, numericId];
       const result = await pool.query(updateQuery, updateParams);
-
+      await uploadFile(pool, "categories", numericId, file);
       return mapCategoryRow(result.rows[0], []);
     },
     deleteCategory: async (_: any, body: { id: string }, context) => {
@@ -149,7 +161,28 @@ export default {
         [numericId]
       );
 
+      await deletePhoto(pool, "categories", numericId);
+
       return id;
+    },
+  },
+  Category: {
+    photo: async (parent: any, _: any, context: any) => {
+      const numericId = decodeId(Models.Category, parent.id);
+
+      const result = await pool.query(
+        `SELECT photography_url, photography_key 
+         FROM photos 
+         WHERE model = $1 AND model_id = $2`,
+        ["categories", numericId]
+      );
+
+      if (result.rows.length === 0) return null;
+
+      return {
+        url: result.rows[0].photography_url,
+        key: result.rows[0].photography_key,
+      };
     },
   },
 };

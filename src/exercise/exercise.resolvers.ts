@@ -5,7 +5,7 @@ import {
 } from "../category/utils.js";
 import pool from "../database.js";
 import { Models } from "../shared/enums.js";
-import { decodeId } from "../shared/utils.js";
+import { decodeId, deletePhoto, uploadFile } from "../shared/utils.js";
 import { checkExistenceAndOwnership, requireAuth } from "../user/utils.js";
 import {
   checkDuplication,
@@ -116,11 +116,17 @@ export default {
   Mutation: {
     addExercise: async (
       _: any,
-      body: { exercise: { name: string; category: string; url: string } },
+      {
+        exercise,
+        file,
+      }: {
+        exercise: { name: string; category: string; url: string };
+        file: any;
+      },
       context
     ) => {
       requireAuth(context);
-      const { name, category, url } = body.exercise;
+      const { name, category, url } = exercise;
 
       if (!name || !category || !url) {
         throw new Error("Pedido inválido");
@@ -147,17 +153,24 @@ export default {
 
       const insertParams = [name, numericCategory, url, context.user.id];
       const result = await pool.query(insertQuery, insertParams);
+      const exerciseId = result.rows[0].id;
+
+      await uploadFile(pool, "exercises", exerciseId, file);
       return mapExerciseRow(result.rows[0]);
     },
     editExercise: async (
       _: any,
-      body: {
+      {
+        exercise,
+        file,
+      }: {
         exercise: { id: string; name: string; category: string; url: string };
+        file: any;
       },
       context
     ) => {
       requireAuth(context);
-      const { id, name, category, url } = body.exercise;
+      const { id, name, category, url } = exercise;
       if (!name || !category || !url) {
         throw new Error("Pedido inválido");
       }
@@ -195,6 +208,8 @@ export default {
 
       const updateParams = [name, numericCategory, url, numericId];
       const result = await pool.query(updateQuery, updateParams);
+
+      await uploadFile(pool, "exercises", numericId, file);
       return mapExerciseRow(result.rows[0]);
     },
     deleteExercise: async (_: any, body: { id: string }, context) => {
@@ -217,10 +232,29 @@ export default {
         [numericId]
       );
 
+      await deletePhoto(pool, "exercises", numericId);
+
       return id;
     },
   },
   Exercise: {
+    photo: async (parent: any, _: any, context: any) => {
+      const numericId = decodeId(Models.Exercise, parent.id);
+
+      const result = await pool.query(
+        `SELECT photography_url, photography_key 
+         FROM photos 
+         WHERE model = $1 AND model_id = $2`,
+        ["exercises", numericId]
+      );
+
+      if (result.rows.length === 0) return null;
+
+      return {
+        url: result.rows[0].photography_url,
+        key: result.rows[0].photography_key,
+      };
+    },
     allCategories: async (parent, _, { db }) => {
       const numericId = decodeId(Models.Exercise, parent.id);
       const query = `

@@ -4,6 +4,7 @@ type Exercise {
   url: String!
   category: String!
   allCategories: [Category!]!
+  photo: Photo
   createdAt: String!
   updatedAt: String!
 }
@@ -41,7 +42,7 @@ type Query {
 }
 
 extend type Mutation {
-  addExercise(exercise: ExerciseInput!): Exercise
-  editExercise(exercise: ExerciseInputWithId!): Exercise
+  addExercise(exercise: ExerciseInput!, file: Upload): Exercise
+  editExercise(exercise: ExerciseInputWithId!, file: Upload): Exercise
   deleteExercise(id: String!): ID
 }
