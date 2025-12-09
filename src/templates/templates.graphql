@@ -6,6 +6,7 @@ type Template {
   archivedAt: String
   createdAt: String!
   updatedAt: String!
+  photo: Photo
 }
 
 type TemplateExercise {
@@ -74,7 +75,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  createTemplate(input: CreateTemplateInput!): Template!
-  updateTemplate(input: UpdateTemplateInput!): Template!
+  createTemplate(input: CreateTemplateInput!, file: Upload): Template!
+  updateTemplate(input: UpdateTemplateInput!, file: Upload): Template!
   deleteTemplate(id: String!): ID
 }

@@ -6,6 +6,8 @@ export enum Models {
   TemplateExercises = "TEMPLATE-EXERCISES",
   UserDetails = "USER-DETAILS",
   ExerciseVariables = "EXERCISE-VARIABLES",
+  Training = "TRAINING",
+  TrainingExercises = "TRAINING-EXERCISES",
 }
 
 export const Tables: Record<Models, string> = {
@@ -16,6 +18,8 @@ export const Tables: Record<Models, string> = {
   [Models.TemplateExercises]: "template_exercises",
   [Models.UserDetails]: "user_details",
   [Models.ExerciseVariables]: "exercise_variables",
+  [Models.Training]: "trainings",
+  [Models.TrainingExercises]: "training_exercises",
 };
 
 export enum Errors {

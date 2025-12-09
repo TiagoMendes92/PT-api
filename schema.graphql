@@ -22,17 +22,18 @@ type Query {
   adminUsers(first: Int, after: String, filter: AdminUserFilterInput): AdminUserConnection!
   roles: [Role]
   templates(first: Int = 10, after: String, searchTerm: String): TemplateConnection!
+  trainings(first: Int = 10, after: String, searchTerm: String): TrainingConnection!
   me: User
 }
 
 type Mutation {
   updateUserDetails(birthday: String, height: Int, weight: Int, sex: String): AlunoDetails!
   uploadProfilePhoto(file: Upload!): AlunoDetails!
-  addCategory(cat: CategoryInput!): Category
-  editCategory(cat: CategoryInputWithId!): Category
+  addCategory(cat: CategoryInput!, file: Upload): Category
+  editCategory(cat: CategoryInputWithId!, file: Upload): Category
   deleteCategory(id: String!): ID
-  addExercise(exercise: ExerciseInput!): Exercise
-  editExercise(exercise: ExerciseInputWithId!): Exercise
+  addExercise(exercise: ExerciseInput!, file: Upload): Exercise
+  editExercise(exercise: ExerciseInputWithId!, file: Upload): Exercise
   deleteExercise(id: String!): ID
   addExerciseVariable(variable: ExerciseVariableInput!): ExerciseVariable
   editExerciseVariable(variable: ExerciseVariableInputWithId!): ExerciseVariable
@@ -44,10 +45,18 @@ type Mutation {
   deactivateUser(id: String!): AdminUser
   setPassword(token: String!, password: String!): SetPasswordResult!
   resendRegistrationEmail(userId: ID!): ResendEmailResult!
-  createTemplate(input: CreateTemplateInput!): Template!
-  updateTemplate(input: UpdateTemplateInput!): Template!
+  createTemplate(input: CreateTemplateInput!, file: Upload): Template!
+  updateTemplate(input: UpdateTemplateInput!, file: Upload): Template!
   deleteTemplate(id: String!): ID
+  createTraining(input: CreateTrainingInput!): Training!
+  updateTraining(input: UpdateTrainingInput!): Training!
+  deleteTraining(id: String!): ID
   login(email: String!, password: String!): AuthPayload!
+}
+
+type Photo {
+  url: String!
+  key: String!
 }
 
 type Category {
@@ -57,6 +66,7 @@ type Category {
   updatedAt: String!
   parentCategory: String
   subcategories: [Category!]!
+  photo: Photo
 }
 
 input CategoryInput {
@@ -76,6 +86,7 @@ type Exercise {
   url: String!
   category: String!
   allCategories: [Category!]!
+  photo: Photo
   createdAt: String!
   updatedAt: String!
 }
@@ -209,6 +220,7 @@ type Template {
   archivedAt: String
   createdAt: String!
   updatedAt: String!
+  photo: Photo
 }
 
 type TemplateExercise {
@@ -266,6 +278,73 @@ input UpdateTemplateInput {
   name: String!
   description: String
   exercises: [TemplateExerciseInput!]!
+}
+
+type Training {
+  id: ID!
+  name: String!
+  description: String
+  exercises: [TrainingExercise!]!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TrainingExercise {
+  id: ID!
+  exercise: Exercise!
+  orderPosition: Int!
+  sets: [TrainingExerciseSet!]!
+  createdAt: String!
+}
+
+type TrainingExerciseSet {
+  setNumber: Int!
+  variables: [TrainingExerciseSetVariable!]!
+}
+
+type TrainingExerciseSetVariable {
+  variable: ExerciseVariable!
+  targetValue: String
+}
+
+type TrainingEdge {
+  cursor: String!
+  node: Training!
+}
+
+type TrainingConnection {
+  edges: [TrainingEdge!]!
+  pageInfo: PageInfo!
+}
+
+input CreateTrainingInput {
+  name: String!
+  description: String
+  exercises: [TrainingExerciseInput!]!
+}
+
+input TrainingExerciseInput {
+  exerciseId: ID!
+  orderPosition: Int!
+  sets: [TrainingExerciseSetInput!]!
+}
+
+input TrainingExerciseSetInput {
+  setNumber: Int!
+  variables: [TrainingExerciseSetVariableInput!]!
+}
+
+input TrainingExerciseSetVariableInput {
+  variableId: ID!
+  targetValue: String
+}
+
+input UpdateTrainingInput {
+  id: String!
+  name: String!
+  description: String
+  exercises: [TrainingExerciseInput!]!
 }
 
 type User {

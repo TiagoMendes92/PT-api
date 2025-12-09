@@ -58,7 +58,6 @@ export default {
       const result = await pool.query(query, values);
       return mapAlunoRow(result.rows[0]);
     },
-
     uploadProfilePhoto: async (_, { file }, context: any) => {
       requireAuth(context);
       const uploadedFile = await file;
@@ -112,7 +111,6 @@ export default {
       return mapAlunoRow(result.rows[0]);
     },
   },
-
   Query: {
     async userDetails(_, { user_id }, context: any) {
       requireAuth(context);

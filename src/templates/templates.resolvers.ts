@@ -1,6 +1,11 @@
 import pool from "../database.js";
 import { Models } from "../shared/enums.js";
-import { decodeId, encodeId } from "../shared/utils.js";
+import {
+  decodeId,
+  deletePhoto,
+  encodeId,
+  uploadFile,
+} from "../shared/utils.js";
 import { checkExistenceAndOwnership, requireAuth } from "../user/utils.js";
 import { checkDuplication, mapTemplateRow } from "./utils.js";
 import { errorMessage as templateErrorMessage } from "./utils.js";
@@ -83,7 +88,10 @@ export default {
   Mutation: {
     createTemplate: async (
       _: any,
-      body: {
+      {
+        input,
+        file,
+      }: {
         input: {
           name: string;
           description: string;
@@ -99,12 +107,13 @@ export default {
             }[];
           }[];
         };
+        file: any;
       },
       context
     ) => {
       requireAuth(context);
 
-      const { name, description, exercises = [] } = body.input;
+      const { name, description, exercises = [] } = input;
       if (!name || !exercises?.length) {
         throw new Error("Pedido inválido");
       }
@@ -201,8 +210,8 @@ export default {
           }
         }
 
+        await uploadFile(pool, "templates", template.id, file);
         await client.query("COMMIT");
-
         return mapTemplateRow(template);
       } catch (error) {
         await client.query("ROLLBACK");
@@ -213,7 +222,10 @@ export default {
     },
     updateTemplate: async (
       _: any,
-      body: {
+      {
+        input,
+        file,
+      }: {
         input: {
           id: string;
           name: string;
@@ -230,12 +242,13 @@ export default {
             }[];
           }[];
         };
+        file: any;
       },
       context
     ) => {
       requireAuth(context);
 
-      const { id, name, description, exercises = [] } = body.input;
+      const { id, name, description, exercises = [] } = input;
       if (!id || !name || !exercises?.length) {
         throw new Error("Pedido inválido");
       }
@@ -348,6 +361,7 @@ export default {
         }
 
         await client.query("COMMIT");
+        await uploadFile(pool, "templates", numericId, file);
         return mapTemplateRow(template);
       } catch (error) {
         await client.query("ROLLBACK");
@@ -376,10 +390,29 @@ export default {
         [numericId]
       );
 
+      await deletePhoto(pool, "templates", numericId);
+
       return id;
     },
   },
   Template: {
+    photo: async (parent: any, _: any, context: any) => {
+      const numericId = decodeId(Models.Template, parent.id);
+
+      const result = await pool.query(
+        `SELECT photography_url, photography_key 
+         FROM photos 
+         WHERE model = $1 AND model_id = $2`,
+        ["templates", numericId]
+      );
+
+      if (result.rows.length === 0) return null;
+
+      return {
+        url: result.rows[0].photography_url,
+        key: result.rows[0].photography_key,
+      };
+    },
     exercises: async (parent, _) => {
       const query = `
         SELECT 
