@@ -8,6 +8,20 @@ type AdminUser {
   archivedAt: String
   deactivatedAt: String
   passwordSetAt: String
+  photo: Photo
+}
+
+type AdminUserWithProfile {
+  id: ID!
+  email: String!
+  name: String!
+  status: UserStatus!
+  createdAt: String!
+  updatedAt: String
+  archivedAt: String
+  deactivatedAt: String
+  passwordSetAt: String
+  userDetails: AlunoDetails
 }
 
 enum UserStatus {
@@ -58,6 +72,7 @@ extend type Query {
     after: String
     filter: AdminUserFilterInput
   ): AdminUserConnection!
+  adminUser(id: String!): AdminUserWithProfile
 }
 
 extend type Mutation {

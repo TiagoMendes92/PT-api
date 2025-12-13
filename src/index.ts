@@ -85,6 +85,6 @@ app.post(
   }
 );
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
 });

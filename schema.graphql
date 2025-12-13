@@ -20,9 +20,10 @@ type Query {
   allVariables: [ExerciseVariable!]!
   exerciseVariables(first: Int = 10, after: String, searchTerm: String): ExerciseVariablesConnection!
   adminUsers(first: Int, after: String, filter: AdminUserFilterInput): AdminUserConnection!
+  adminUser(id: String!): AdminUserWithProfile
   roles: [Role]
   templates(first: Int = 10, after: String, searchTerm: String): TemplateConnection!
-  trainings(first: Int = 10, after: String, searchTerm: String): TrainingConnection!
+  trainings(target_id: String!): [Training!]!
   me: User
 }
 
@@ -48,9 +49,7 @@ type Mutation {
   createTemplate(input: CreateTemplateInput!, file: Upload): Template!
   updateTemplate(input: UpdateTemplateInput!, file: Upload): Template!
   deleteTemplate(id: String!): ID
-  createTraining(input: CreateTrainingInput!): Training!
-  updateTraining(input: UpdateTrainingInput!): Training!
-  deleteTraining(id: String!): ID
+  createTraining(input: CreateTrainingInput!, file: Upload): Training!
   login(email: String!, password: String!): AuthPayload!
 }
 
@@ -156,6 +155,20 @@ type AdminUser {
   archivedAt: String
   deactivatedAt: String
   passwordSetAt: String
+  photo: Photo
+}
+
+type AdminUserWithProfile {
+  id: ID!
+  email: String!
+  name: String!
+  status: UserStatus!
+  createdAt: String!
+  updatedAt: String
+  archivedAt: String
+  deactivatedAt: String
+  passwordSetAt: String
+  userDetails: AlunoDetails
 }
 
 enum UserStatus {
@@ -288,6 +301,7 @@ type Training {
   archivedAt: String
   createdAt: String!
   updatedAt: String!
+  photo: Photo
 }
 
 type TrainingExercise {
@@ -308,17 +322,14 @@ type TrainingExerciseSetVariable {
   targetValue: String
 }
 
-type TrainingEdge {
-  cursor: String!
-  node: Training!
-}
-
-type TrainingConnection {
-  edges: [TrainingEdge!]!
-  pageInfo: PageInfo!
+input PhotoInput {
+  url: String!
+  key: String!
 }
 
 input CreateTrainingInput {
+  target_id: String!
+  photo: PhotoInput
   name: String!
   description: String
   exercises: [TrainingExerciseInput!]!
@@ -338,13 +349,6 @@ input TrainingExerciseSetInput {
 input TrainingExerciseSetVariableInput {
   variableId: ID!
   targetValue: String
-}
-
-input UpdateTrainingInput {
-  id: String!
-  name: String!
-  description: String
-  exercises: [TrainingExerciseInput!]!
 }
 
 type User {

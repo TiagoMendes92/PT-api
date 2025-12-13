@@ -4,7 +4,7 @@ import {
   mapCategoryRow,
 } from "../category/utils.js";
 import pool from "../database.js";
-import { Models } from "../shared/enums.js";
+import { Models, Tables } from "../shared/enums.js";
 import { decodeId, deletePhoto, uploadFile } from "../shared/utils.js";
 import { checkExistenceAndOwnership, requireAuth } from "../user/utils.js";
 import {
@@ -155,7 +155,7 @@ export default {
       const result = await pool.query(insertQuery, insertParams);
       const exerciseId = result.rows[0].id;
 
-      await uploadFile(pool, "exercises", exerciseId, file);
+      await uploadFile(pool, Tables.EXERCISE, exerciseId, file);
       return mapExerciseRow(result.rows[0]);
     },
     editExercise: async (
@@ -209,7 +209,7 @@ export default {
       const updateParams = [name, numericCategory, url, numericId];
       const result = await pool.query(updateQuery, updateParams);
 
-      await uploadFile(pool, "exercises", numericId, file);
+      await uploadFile(pool, Tables.EXERCISE, numericId, file);
       return mapExerciseRow(result.rows[0]);
     },
     deleteExercise: async (_: any, body: { id: string }, context) => {
@@ -232,7 +232,7 @@ export default {
         [numericId]
       );
 
-      await deletePhoto(pool, "exercises", numericId);
+      await deletePhoto(pool, Tables.EXERCISE, numericId);
 
       return id;
     },
@@ -245,7 +245,7 @@ export default {
         `SELECT photography_url, photography_key 
          FROM photos 
          WHERE model = $1 AND model_id = $2`,
-        ["exercises", numericId]
+        [Tables.EXERCISE, numericId]
       );
 
       if (result.rows.length === 0) return null;

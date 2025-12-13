@@ -4,7 +4,7 @@ import { Errors, Models } from "../shared/enums.js";
 
 export const mapTrainingRow = (row) => ({
   ...row,
-  id: encodeId(Models.Template, row.id),
+  id: encodeId(Models.Training, row.id),
   archivedAt: row.archived_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -13,6 +13,7 @@ export const mapTrainingRow = (row) => ({
 export const checkDuplication = async (
   name: string,
   userId: string,
+  target_id: string,
   excludeId?: string
 ): Promise<void> => {
   const query = `
@@ -20,14 +21,15 @@ export const checkDuplication = async (
     WHERE created_by = $1 
     AND name = $2 
     AND archived_at IS NULL
-    ${excludeId ? `AND id != $3` : ""}
+    AND training_target = $3
+    ${excludeId ? `AND id != $4` : ""}
   `;
 
-  const params = [userId, name, ...(excludeId ? [excludeId] : [])];
+  const params = [userId, name, target_id, ...(excludeId ? [excludeId] : [])];
 
   const result = await pool.query(query, params);
   if (result.rows.length > 0) {
-    throw new Error("Template já existe");
+    throw new Error("Treino já existe");
   }
 };
 

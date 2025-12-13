@@ -5,10 +5,43 @@ import { checkExistenceAndOwnership, requireAuth } from "../user/utils.js";
 import { checkDuplication, errorMessage, mapUserRow } from "./utils.js";
 import { sendEmail } from "../mails/send_email.js";
 import { decodeId } from "../shared/utils.js";
-import { Models } from "../shared/enums.js";
+import { Errors, Models } from "../shared/enums.js";
+import { mapAlunoRow } from "../aluno/utils.js";
 
 export default {
   Query: {
+    adminUser: async (_, args: { id: string }, context) => {
+      const { id: user_id } = args;
+      const numericId = decodeId(Models.AdminUser, user_id);
+
+      const error = await checkExistenceAndOwnership(
+        Models.AdminUser,
+        numericId,
+        context.user.id
+      );
+
+      if (error) {
+        throw new Error(errorMessage(error));
+      }
+
+      const query = `
+        SELECT u.* 
+        FROM users u
+        WHERE u.created_by = $1 
+        AND u.id = $2
+        AND u.status != 'archived'
+        LIMIT 1
+      `;
+
+      const result = await pool.query(query, [context.user.id, numericId]);
+      const rows = result.rows;
+
+      if (!rows.length) {
+        throw new Error(errorMessage(Errors.NotExist));
+      }
+
+      return mapUserRow(rows[0]);
+    },
     adminUsers: async (_, args, context) => {
       requireAuth(context);
 
@@ -353,6 +386,41 @@ export default {
       );
 
       return mapUserRow(result.rows[0]);
+    },
+  },
+  AdminUser: {
+    photo: async (parent: any, _: any, context: any) => {
+      const numericId = decodeId(Models.AdminUser, parent.id);
+
+      const result = await pool.query(
+        `SELECT photography_url, photography_key 
+         FROM user_details 
+         WHERE user_id = $1`,
+        [numericId]
+      );
+
+      if (result.rows.length === 0) return null;
+
+      return {
+        url: result.rows[0].photography_url,
+        key: result.rows[0].photography_key,
+      };
+    },
+  },
+  AdminUserWithProfile: {
+    userDetails: async (parent: any, _: any, context: any) => {
+      const numericId = decodeId(Models.AdminUser, parent.id);
+
+      const result = await pool.query(
+        `SELECT *
+         FROM user_details 
+         WHERE user_id = $1`,
+        [numericId]
+      );
+
+      if (result.rows.length === 0) return null;
+
+      return mapAlunoRow(result.rows[0]);
     },
   },
 };

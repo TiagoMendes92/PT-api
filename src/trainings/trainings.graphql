@@ -1,0 +1,65 @@
+type Training {
+  id: ID!
+  name: String!
+  description: String
+  exercises: [TrainingExercise!]!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
+  photo: Photo
+}
+
+type TrainingExercise {
+  id: ID!
+  exercise: Exercise!
+  orderPosition: Int!
+  sets: [TrainingExerciseSet!]!
+  createdAt: String!
+}
+
+type TrainingExerciseSet {
+  setNumber: Int!
+  variables: [TrainingExerciseSetVariable!]!
+}
+
+type TrainingExerciseSetVariable {
+  variable: ExerciseVariable!
+  targetValue: String
+}
+
+input PhotoInput {
+  url: String!
+  key: String!
+}
+
+input CreateTrainingInput {
+  target_id: String!
+  photo: PhotoInput
+  name: String!
+  description: String
+  exercises: [TrainingExerciseInput!]!
+}
+
+input TrainingExerciseInput {
+  exerciseId: ID!
+  orderPosition: Int!
+  sets: [TrainingExerciseSetInput!]!
+}
+
+input TrainingExerciseSetInput {
+  setNumber: Int!
+  variables: [TrainingExerciseSetVariableInput!]!
+}
+
+input TrainingExerciseSetVariableInput {
+  variableId: ID!
+  targetValue: String
+}
+
+extend type Query {
+  trainings(target_id: String!): [Training!]!
+}
+
+extend type Mutation {
+  createTraining(input: CreateTrainingInput!, file: Upload): Training!
+}

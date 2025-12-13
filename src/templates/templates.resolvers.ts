@@ -1,5 +1,5 @@
 import pool from "../database.js";
-import { Models } from "../shared/enums.js";
+import { Models, Tables } from "../shared/enums.js";
 import {
   decodeId,
   deletePhoto,
@@ -210,7 +210,7 @@ export default {
           }
         }
 
-        await uploadFile(pool, "templates", template.id, file);
+        await uploadFile(pool, Tables.TEMPLATE, template.id, file);
         await client.query("COMMIT");
         return mapTemplateRow(template);
       } catch (error) {
@@ -361,7 +361,7 @@ export default {
         }
 
         await client.query("COMMIT");
-        await uploadFile(pool, "templates", numericId, file);
+        await uploadFile(pool, Tables.TEMPLATE, numericId, file);
         return mapTemplateRow(template);
       } catch (error) {
         await client.query("ROLLBACK");
@@ -390,7 +390,7 @@ export default {
         [numericId]
       );
 
-      await deletePhoto(pool, "templates", numericId);
+      await deletePhoto(pool, Tables.TEMPLATE, numericId);
 
       return id;
     },
@@ -403,7 +403,7 @@ export default {
         `SELECT photography_url, photography_key 
          FROM photos 
          WHERE model = $1 AND model_id = $2`,
-        ["templates", numericId]
+        [Tables.TEMPLATE, numericId]
       );
 
       if (result.rows.length === 0) return null;
