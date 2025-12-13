@@ -192,6 +192,83 @@ export default {
         client.release();
       }
     },
+    editTraining: async (
+      _: any,
+      {
+        input,
+      }: {
+        input: {
+          training_id: string;
+          exercises: {
+            exerciseId: string;
+            orderPosition: number;
+            sets: {
+              setNumber: number;
+              variables: {
+                id: string;
+                variableId: string;
+                targetValue?: string;
+              }[];
+            }[];
+          }[];
+        };
+      },
+      context
+    ) => {
+      requireAuth(context);
+      const { exercises = [], training_id } = input;
+
+      if (!exercises?.length || !training_id) {
+        throw new Error("Pedido inválido");
+      }
+      const numericId = decodeId(Models.Training, training_id);
+      const error = await checkExistenceAndOwnership(
+        Models.Training,
+        numericId,
+        context.user.id
+      );
+
+      if (error) {
+        throw new Error(trainingErrorMessage(error));
+      }
+
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+
+        for (const ex of exercises) {
+          for (const set of ex.sets) {
+            for (const variable of set.variables) {
+              const updateQuery = `
+                UPDATE training_exercise_set_variables
+                SET target_value = $1
+                WHERE id = $2
+              `;
+
+              await client.query(updateQuery, [
+                variable.targetValue,
+                variable.id,
+              ]);
+            }
+          }
+        }
+
+        const query = `
+          SELECT *
+          FROM trainings t
+          WHERE id = $1
+      `;
+
+        const result = await pool.query(query, [numericId]);
+        await client.query("COMMIT");
+        return mapTrainingRow(result.rows[0]);
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
   },
   Training: {
     photo: async (parent: any, _: any, context: any) => {
@@ -249,6 +326,7 @@ export default {
     sets: async (parent, _) => {
       const query = `
         SELECT 
+          tesv.id,
           tesv.set_number,
           tesv.target_value,
           ev.id as variable_id,
@@ -272,6 +350,7 @@ export default {
           });
         }
         setMap.get(row.set_number).variables.push({
+          id: row.id,
           variable: {
             id: encodeId(Models.ExerciseVariables, row.variable_id),
             name: row.variable_name,

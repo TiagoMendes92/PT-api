@@ -23,6 +23,7 @@ type TrainingExerciseSet {
 }
 
 type TrainingExerciseSetVariable {
+  id: String
   variable: ExerciseVariable!
   targetValue: String
 }
@@ -40,6 +41,11 @@ input CreateTrainingInput {
   exercises: [TrainingExerciseInput!]!
 }
 
+input UpdateTrainingInput {
+  training_id: String!
+  exercises: [TrainingExerciseInput!]!
+}
+
 input TrainingExerciseInput {
   exerciseId: ID!
   orderPosition: Int!
@@ -52,6 +58,7 @@ input TrainingExerciseSetInput {
 }
 
 input TrainingExerciseSetVariableInput {
+  id: String
   variableId: ID!
   targetValue: String
 }
@@ -62,4 +69,5 @@ extend type Query {
 
 extend type Mutation {
   createTraining(input: CreateTrainingInput!, file: Upload): Training!
+  editTraining(input: UpdateTrainingInput!): Training!
 }
